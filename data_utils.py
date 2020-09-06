@@ -12,13 +12,20 @@ def get_data(path, dataset, iteration):
     for d in data:
         data_path = path + '/' + d
         files = os.listdir(data_path)
+        files = [filename for filename in files if filename[-3:] == 'txt']
 
         poses = tf.convert_to_tensor([])
         left_hands = tf.convert_to_tensor([])
         right_hands = tf.convert_to_tensor([])
+
         for i, filename in enumerate(files):
-            f = open(filename)
+            f = open(data_path + '/' + filename)
             content = f.readlines()
+            
+            if len(content) != 67:  # printing the ones that have discrepency of 2 persons being detected
+                print(d, filename)
+                break
+            
             pose = []
             left_hand = []
             right_hand = []
@@ -40,9 +47,9 @@ def get_data(path, dataset, iteration):
                         right_hand.append(list(map(float, con[3:-2].split())))
 
             
-            pose = tf.convert_to_tensor(pose)
-            left_hand = tf.convert_to_tensor(left_hand)
-            right_hand = tf.convert_to_tensor(right_hand)
+            pose = tf.expand_dims(tf.convert_to_tensor(pose), axis=0)
+            left_hand = tf.expand_dims(tf.convert_to_tensor(left_hand), axis=0)
+            right_hand = tf.expand_dims(tf.convert_to_tensor(right_hand), axis=0)
 
             if i == 0:
                 poses = pose
@@ -54,9 +61,9 @@ def get_data(path, dataset, iteration):
                 left_hands = tf.concat([left_hands, left_hand], axis=0)
                 right_hands = tf.concat([right_hands, right_hand], axis=0)
 
-        poses = tf.reshape(poses, (i+1, -1, poses.shape[-1]))
-        left_hands = tf.reshape(left_hands, (i+1, -1, left_hands.shape[-1]))
-        right_hands = tf.reshape(right_hands, (i+1, -1, right_hands.shape[-1]))
+        #poses = tf.reshape(poses, (i+1, -1, poses.shape[-1]))
+        #left_hands = tf.reshape(left_hands, (i+1, -1, left_hands.shape[-1]))
+        #right_hands = tf.reshape(right_hands, (i+1, -1, right_hands.shape[-1]))
 
         batched_data.append([poses, left_hands, right_hands])
 
@@ -77,16 +84,14 @@ def preprocess(data, net_sequence_length):   # removing 3rd column and concatena
         right_hands = tf.reshape(right_hands, (right_hands.shape[0], -1))[:, :-right_hands.shape[1]]
 
         concat_data = tf.concat([poses, left_hands, right_hands], axis=-1)
-        padded_data = padding(concat_data, net_sequence_length)
+        padded_data = tf.expand_dims(padding(concat_data, net_sequence_length), axis=0)
 
         if i == 0:
             processed_data = padded_data
         else:
             processed_data = tf.concat([processed_data, padded_data], axis=0)
 
-    processed_data = tf.reshape(processed_data, (len(data), net_sequence_length, -1))
-        
-
+    #processed_data = tf.reshape(processed_data, (len(data), net_sequence_length, -1))   
     return processed_data
 
 
