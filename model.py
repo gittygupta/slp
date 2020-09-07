@@ -52,6 +52,7 @@ class Decoder(tf.keras.Model):
         for _ in range(num_decoder_blocks):
             self.decoder_blocks.append(DecoderBlock(num_heads, d_model, d_ffn))
 
+        # final layer
         self.final_layer = tf.keras.layers.Dense(d_out)#, activation='relu')
 
     def call(self, x, bert_out, look_ahead_mask, padding_mask):

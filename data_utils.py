@@ -23,8 +23,8 @@ def get_data(path, dataset, iteration):
             content = f.readlines()
             
             if len(content) != 67:  # printing the ones that have discrepency of 2 persons being detected
-                print(d, filename)
-                break
+                #print(d, filename)
+                continue
             
             pose = []
             left_hand = []
@@ -70,6 +70,13 @@ def get_data(path, dataset, iteration):
     return batched_data
 
 
+def positional_encoding(seq_length):    # values between 0 and 1 for each frame
+    counter = []
+    for i in range(seq_length):
+        counter.append(i / float(seq_length - 1))
+    return tf.convert_to_tensor(counter)
+
+
 def padding(data, net_sequence_length):
     pad_length = net_sequence_length - data.shape[0]
     pad = tf.zeros((pad_length, data.shape[1]))
@@ -78,12 +85,22 @@ def padding(data, net_sequence_length):
 
 def preprocess(data, net_sequence_length):   # removing 3rd column and concatenating all
     processed_data = tf.convert_to_tensor([])
+    seq_lengths = []
     for i, (poses, left_hands, right_hands) in enumerate(data):
-        poses = tf.reshape(poses, (poses.shape[0], -1))[:, :-poses.shape[1]]
-        left_hands = tf.reshape(left_hands, (left_hands.shape[0], -1))[:, :-left_hands.shape[1]]
-        right_hands = tf.reshape(right_hands, (right_hands.shape[0], -1))[:, :-right_hands.shape[1]]
+        poses = tf.reshape(poses[:, :, :], (poses.shape[0], -1))     # removed 3rd column
+        left_hands = tf.reshape(left_hands[:, :, :], (left_hands.shape[0], -1))
+        right_hands = tf.reshape(right_hands[:, :, :], (right_hands.shape[0], -1))
+        #poses = tf.reshape(poses, (poses.shape[0], -1))[:, :-poses.shape[1]]
+        #left_hands = tf.reshape(left_hands, (left_hands.shape[0], -1))[:, :-left_hands.shape[1]]
+        #right_hands = tf.reshape(right_hands, (right_hands.shape[0], -1))[:, :-right_hands.shape[1]]
 
-        concat_data = tf.concat([poses, left_hands, right_hands], axis=-1)
+        positions = positional_encoding(poses.shape[0])     # passing number of frames
+        concat_data = tf.concat([poses, left_hands, right_hands, tf.expand_dims(positions, axis=-1)], axis=-1)
+        start_token = tf.zeros((1, concat_data.shape[-1]))
+        concat_data = tf.concat([start_token, concat_data], axis=0)
+
+        seq_lengths.append(concat_data.shape[1])
+
         padded_data = tf.expand_dims(padding(concat_data, net_sequence_length), axis=0)
 
         if i == 0:
@@ -92,14 +109,12 @@ def preprocess(data, net_sequence_length):   # removing 3rd column and concatena
             processed_data = tf.concat([processed_data, padded_data], axis=0)
 
     #processed_data = tf.reshape(processed_data, (len(data), net_sequence_length, -1))   
-    return processed_data
+    return processed_data, seq_lengths
 
 
-def get_processed_data(path, batch_size, iteration, net_sequence_length):
-    dataset = os.listdir(path)
-    dataset = [dataset[i : i + batch_size] for i in range(0, len(dataset), batch_size)]
-
+def get_processed_data(path, dataset, iteration, net_sequence_length):
     batched_data = get_data(path, dataset, iteration)
-    preprocessed_data = preprocess(batched_data, net_sequence_length)
+    preprocessed_data, seq_lengths = preprocess(batched_data, net_sequence_length)
 
-    return preprocessed_data
+    return preprocessed_data, seq_lengths
+
