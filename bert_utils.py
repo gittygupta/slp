@@ -5,7 +5,7 @@ import bert
 #max_sequence_length = 64
 
 class Bert(object):
-    def __init__(self, max_sequence_length=64):
+    def __init__(self, max_sequence_length):     # doesn't quite matter
         super(Bert, self).__init__()
         self.max_seq_length = max_sequence_length
         self.model_dir = 'models/multi_cased_L-12_H-768_A-12'
@@ -42,6 +42,7 @@ class Bert(object):
 
     def get_sequence_ids(self, tokenized_sequence):
         sequence_ids = self.tokenizer.convert_tokens_to_ids(tokenized_sequence)
+        #print(len(sequence_ids))   Use as padding_mask
         sequence_ids = sequence_ids + [0] * (self.max_seq_length - len(sequence_ids))    # padding
         return sequence_ids
 
@@ -54,13 +55,20 @@ class Bert(object):
 
         preprocessed_sequence_ids = []
         for sequence in sequence_list:
-            preprocessed_sequence_ids.append(self.preprocess(sequence))
-        return np.array(preprocessed_sequence_ids)
+            preprocessed_sequence_ids.append(tf.convert_to_tensor(self.preprocess(sequence)))
+
+        #print(preprocessed_sequence_ids)
+        preprocessed_sequence_ids = tf.convert_to_tensor(preprocessed_sequence_ids)
+        #print(preprocessed_sequence_ids)
+        #print(preprocessed_sequence_ids.shape)
+
+        return preprocessed_sequence_ids
 
     def __call__(self, sequence_list):
         #if type(sequence_list) != list or sequence_list:
         #    sequence_list = [sequence_list]
         preprocessed_sequence_ids = self.preprocess_batch(sequence_list)
+        #print(preprocessed_sequence_ids)
         output = self.model.predict(preprocessed_sequence_ids)      # (?, 64, 768)  for all sentences in batch
         word_embeddings = output                                    # (?, 64, 768)
         

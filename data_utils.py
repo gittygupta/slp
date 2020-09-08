@@ -13,12 +13,15 @@ def get_data(path, dataset, iteration):
         data_path = path + '/' + d
         files = os.listdir(data_path)
         files = [filename for filename in files if filename[-3:] == 'txt']
-
+        files.sort()
+        
         poses = tf.convert_to_tensor([])
         left_hands = tf.convert_to_tensor([])
         right_hands = tf.convert_to_tensor([])
 
+        #print(d)
         for i, filename in enumerate(files):
+            #print(filename)
             f = open(data_path + '/' + filename)
             content = f.readlines()
             
@@ -51,12 +54,14 @@ def get_data(path, dataset, iteration):
             left_hand = tf.expand_dims(tf.convert_to_tensor(left_hand), axis=0)
             right_hand = tf.expand_dims(tf.convert_to_tensor(right_hand), axis=0)
 
-            if i == 0:
+            if poses.shape == (0,):
                 poses = pose
                 left_hands = left_hand
                 right_hands = right_hand
 
             else:
+                #print(poses.shape)
+                #print(pose.shape)
                 poses = tf.concat([poses, pose], axis=0)
                 left_hands = tf.concat([left_hands, left_hand], axis=0)
                 right_hands = tf.concat([right_hands, right_hand], axis=0)

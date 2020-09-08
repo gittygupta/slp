@@ -14,19 +14,18 @@ d_ffn = 256
 d_out = 202
 
 # models
-bert = Bert()
+bert = Bert(max_sequence_length=80)
 decoder = Decoder(num_decoder_blocks, num_heads, d_model, d_ffn, d_out)
 
+# optim and ckpt
 EPOCHS = 1000
-
-# Optim
-learning_rate = 0.0001  # Following microsoft
+learning_rate = 0.0001
 optimizer = tf.keras.optimizers.Adam(learning_rate)     # rest default
 
 # ckpt
 checkpoint_path = './training_checkpoints'
 ckpt = tf.train.Checkpoint(decoder=decoder,
-                           optimizer=optimizer)
+                        optimizer=optimizer)
 ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
 if ckpt_manager.latest_checkpoint:
     ckpt.restore(ckpt_manager.latest_checkpoint)
@@ -56,7 +55,7 @@ def train_step(bert_out, tar, seq_lengths):
 
 # train loop
 def train(sen_path, sign_path, batch_size, net_sequence_length):
-    f = open(sen_path)
+    f = open(sen_path, encoding='utf-8')
     sentences = f.readlines()
     sentences, dataset = sentences[1:], sentences[1:]
     for i in range(len(sentences)):
@@ -69,6 +68,8 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
     for epoch in range(EPOCHS):
         for iteration in range(len(dataset)):
             tar, seq_lengths = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
+            #print(sentences[iteration])
+            #print(len(sentences[iteration]))
             bert_out = bert(sentences[iteration])[0]
 
             train_step(bert_out, tar, seq_lengths)
@@ -78,7 +79,7 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
             print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
                                                          ckpt_save_path))
 
-        #print("Epoch : {}, Loss : {}")
+        print("Epoch : ", epoch + 1)
 
 
 if __name__ == '__main__':
