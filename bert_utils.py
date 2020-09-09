@@ -43,8 +43,9 @@ class Bert(object):
     def get_sequence_ids(self, tokenized_sequence):
         sequence_ids = self.tokenizer.convert_tokens_to_ids(tokenized_sequence)
         #print(len(sequence_ids))   Use as padding_mask
+        seq_length = len(sequence_ids)
         sequence_ids = sequence_ids + [0] * (self.max_seq_length - len(sequence_ids))    # padding
-        return sequence_ids
+        return sequence_ids, seq_length
 
     def preprocess(self, sequence):
         return self.get_sequence_ids(self.tokenize(sequence))
@@ -54,20 +55,23 @@ class Bert(object):
             sequence_list = [sequence_list]
 
         preprocessed_sequence_ids = []
+        seq_lengths = []
         for sequence in sequence_list:
-            preprocessed_sequence_ids.append(tf.convert_to_tensor(self.preprocess(sequence)))
+            sequence_ids, seq_length = self.preprocess(sequence)
+            preprocessed_sequence_ids.append(tf.convert_to_tensor(sequence_ids))
+            seq_lengths.append(seq_length)
 
         #print(preprocessed_sequence_ids)
         preprocessed_sequence_ids = tf.convert_to_tensor(preprocessed_sequence_ids)
         #print(preprocessed_sequence_ids)
         #print(preprocessed_sequence_ids.shape)
 
-        return preprocessed_sequence_ids
+        return preprocessed_sequence_ids, seq_lengths
 
     def __call__(self, sequence_list):
         #if type(sequence_list) != list or sequence_list:
         #    sequence_list = [sequence_list]
-        preprocessed_sequence_ids = self.preprocess_batch(sequence_list)
+        preprocessed_sequence_ids, seq_lengths = self.preprocess_batch(sequence_list)
         #print(preprocessed_sequence_ids)
         output = self.model.predict(preprocessed_sequence_ids)      # (?, 64, 768)  for all sentences in batch
         word_embeddings = output                                    # (?, 64, 768)
@@ -79,7 +83,7 @@ class Bert(object):
 
         sentence_embeddings = np.array(sentence_embeddings)         # (?, 768)
 
-        return word_embeddings, sentence_embeddings
+        return word_embeddings, sentence_embeddings, seq_lengths
 
 '''
 def main():

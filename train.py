@@ -40,12 +40,11 @@ def train_step(bert_out, tar, seq_lengths):
     tar_inp = tar[:, :-1, :]
     tar_real = tar[:, 1:, :]
 
-    #pad_mask = padding_mask(tar_inp.shape[1], seq_lengths)
-    # padding mask will be none for now because output comes from bert
+    pad_mask = padding_mask(bert_out.shape[1], seq_lengths)
     la_mask = look_ahead_mask(tar_inp.shape[1])
 
     with tf.GradientTape() as tape:
-        pred = decoder(tar_inp, bert_out, la_mask, None)
+        pred = decoder(tar_inp, bert_out, la_mask, pad_mask)
         loss = mse(tar_real, pred)
 
     gradients = tape.gradient(loss, decoder.trainable_variables)
@@ -67,17 +66,18 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
 
     for epoch in range(EPOCHS):
         for iteration in range(len(dataset)):
-            tar, seq_lengths = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
+            tar = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
             #print(sentences[iteration])
             #print(len(sentences[iteration]))
-            bert_out = bert(sentences[iteration])[0]
+            words, _, seq_lengths = bert(sentences[iteration])
+            #print(words.shape)
 
-            train_step(bert_out, tar, seq_lengths)
+            train_step(words, tar, seq_lengths)
 
-        if (epoch + 1) % 5 == 0:
-            ckpt_save_path = ckpt_manager.save()
-            print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
-                                                         ckpt_save_path))
+        #if (epoch + 1) % 5 == 0:
+        ckpt_save_path = ckpt_manager.save()
+        print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
+                                                    ckpt_save_path))
 
         print("Epoch : ", epoch + 1)
 

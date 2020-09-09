@@ -90,7 +90,7 @@ def padding(data, net_sequence_length):
 
 def preprocess(data, net_sequence_length):   # removing 3rd column and concatenating all
     processed_data = tf.convert_to_tensor([])
-    seq_lengths = []
+    #seq_lengths = []
     for i, (poses, left_hands, right_hands) in enumerate(data):
         poses = tf.reshape(poses[:, :, :], (poses.shape[0], -1))     # removed 3rd column
         left_hands = tf.reshape(left_hands[:, :, :], (left_hands.shape[0], -1))
@@ -104,7 +104,7 @@ def preprocess(data, net_sequence_length):   # removing 3rd column and concatena
         start_token = tf.zeros((1, concat_data.shape[-1]))
         concat_data = tf.concat([start_token, concat_data], axis=0)
 
-        seq_lengths.append(concat_data.shape[1])
+        #seq_lengths.append(concat_data.shape[1])
 
         padded_data = tf.expand_dims(padding(concat_data, net_sequence_length), axis=0)
 
@@ -114,12 +114,12 @@ def preprocess(data, net_sequence_length):   # removing 3rd column and concatena
             processed_data = tf.concat([processed_data, padded_data], axis=0)
 
     #processed_data = tf.reshape(processed_data, (len(data), net_sequence_length, -1))   
-    return processed_data, seq_lengths
+    return processed_data#, seq_lengths
 
 
 def get_processed_data(path, dataset, iteration, net_sequence_length):
     batched_data = get_data(path, dataset, iteration)
-    preprocessed_data, seq_lengths = preprocess(batched_data, net_sequence_length)
+    preprocessed_data = preprocess(batched_data, net_sequence_length)
 
-    return preprocessed_data, seq_lengths
+    return preprocessed_data
 
