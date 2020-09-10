@@ -19,17 +19,8 @@ decoder = Decoder(num_decoder_blocks, num_heads, d_model, d_ffn, d_out)
 
 # optim and ckpt
 EPOCHS = 1000
-learning_rate = 0.0001
+learning_rate = 0.0002
 optimizer = tf.keras.optimizers.Adam(learning_rate)     # rest default
-
-# ckpt
-checkpoint_path = './training_checkpoints'
-ckpt = tf.train.Checkpoint(decoder=decoder,
-                        optimizer=optimizer)
-ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
-if ckpt_manager.latest_checkpoint:
-    ckpt.restore(ckpt_manager.latest_checkpoint)
-    print ('Latest checkpoint restored!!')
 
 # Loss
 mse = tf.keras.losses.MeanSquaredError()
@@ -54,6 +45,16 @@ def train_step(bert_out, tar, seq_lengths):
 
 # train loop
 def train(sen_path, sign_path, batch_size, net_sequence_length):
+    # ckpt
+    checkpoint_path = './training_checkpoints'
+    ckpt = tf.train.Checkpoint(decoder=decoder,
+                            optimizer=optimizer)
+    ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
+    if ckpt_manager.latest_checkpoint:
+        ckpt.restore(ckpt_manager.latest_checkpoint)
+        print ('Latest checkpoint restored!!')
+
+    # train
     f = open(sen_path, encoding='utf-8')
     sentences = f.readlines()
     sentences, dataset = sentences[1:], sentences[1:]
@@ -65,6 +66,7 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
     sentences = [sentences[i : i + batch_size] for i in range(0, len(sentences), batch_size)]
 
     for epoch in range(EPOCHS):
+        print("Epoch : ", epoch + 1)
         for iteration in range(len(dataset)):
             tar = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
             #print(sentences[iteration])
@@ -78,8 +80,6 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
         ckpt_save_path = ckpt_manager.save()
         print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
                                                     ckpt_save_path))
-
-        print("Epoch : ", epoch + 1)
 
 
 if __name__ == '__main__':

@@ -2,6 +2,13 @@ import tensorflow as tf
 import numpy as np
 import os
 
+IMG_X = 210 / 2.
+IMG_Y = 260 / 2.
+IMG_Z = 1.
+
+VEC = tf.expand_dims(tf.convert_to_tensor([IMG_X, IMG_Y, IMG_Z]), axis=-1)
+SUB = tf.expand_dims(tf.convert_to_tensor([IMG_X, IMG_Y, 0.]), axis=-1)
+
 def get_data(path, dataset, iteration):
     #dataset = os.listdir(path)
     #dataset = [dataset[i : i + batch_size] for i in range(0, len(dataset), batch_size)]
@@ -49,10 +56,20 @@ def get_data(path, dataset, iteration):
                     else:
                         right_hand.append(list(map(float, con[3:-2].split())))
 
-            
-            pose = tf.expand_dims(tf.convert_to_tensor(pose), axis=0)
-            left_hand = tf.expand_dims(tf.convert_to_tensor(left_hand), axis=0)
-            right_hand = tf.expand_dims(tf.convert_to_tensor(right_hand), axis=0)
+            ### Addition ###
+            # Normalize
+            pose = tf.transpose((tf.transpose(tf.convert_to_tensor(pose)) - SUB) / VEC)
+            left_hand = tf.transpose((tf.transpose(tf.convert_to_tensor(left_hand)) - SUB) / VEC)
+            right_hand = tf.transpose((tf.transpose(tf.convert_to_tensor(right_hand)) - SUB) / VEC)
+            ###
+
+            pose = tf.expand_dims(pose, axis=0)
+            left_hand = tf.expand_dims(left_hand, axis=0)
+            right_hand = tf.expand_dims(right_hand, axis=0)
+
+            #print("-----------POSE : -----------", pose)
+            #print("------------LEFT : ----------", left_hand)
+            #print("------------RIGHT: ----------",right_hand)
 
             if poses.shape == (0,):
                 poses = pose
@@ -103,8 +120,6 @@ def preprocess(data, net_sequence_length):   # removing 3rd column and concatena
         concat_data = tf.concat([poses, left_hands, right_hands, tf.expand_dims(positions, axis=-1)], axis=-1)
         start_token = tf.zeros((1, concat_data.shape[-1]))
         concat_data = tf.concat([start_token, concat_data], axis=0)
-
-        #seq_lengths.append(concat_data.shape[1])
 
         padded_data = tf.expand_dims(padding(concat_data, net_sequence_length), axis=0)
 
