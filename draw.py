@@ -83,7 +83,7 @@ def draw(pred, size, coor='3D'):
             if pose_partFrom == (0., 0.) or pose_partTo == (0., 0.):
                 continue
 
-            cv2.line(frame, pose_partFrom, pose_partTo, (255, 74, 0), 1)
+            cv2.line(frame, pose_partFrom, pose_partTo, (255, 74, 0), 2)
             #cv2.ellipse(frame, pose_partFrom, (2, 2), 0, 0, 360, (255, 255, 255), cv2.FILLED)
             #cv2.ellipse(frame, pose_partTo, (2, 2), 0, 0, 360, (255, 255, 255), cv2.FILLED)
             #cv2.putText(white, str(idFrom), points[idFrom], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
@@ -102,7 +102,7 @@ def draw(pred, size, coor='3D'):
             if left_hand_partFrom == (0., 0.) or left_hand_partTo == (0., 0.):
                 continue
 
-            cv2.line(frame, left_hand_partFrom, left_hand_partTo, color, 1)
+            cv2.line(frame, left_hand_partFrom, left_hand_partTo, color, 2)
             #cv2.ellipse(frame, left_hand_partFrom, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
             #cv2.ellipse(frame, left_hand_partTo, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
             #cv2.putText(white, str(idFrom), points[idFrom], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
@@ -121,7 +121,7 @@ def draw(pred, size, coor='3D'):
             if right_hand_partFrom == (0., 0.) or right_hand_partTo == (0., 0.):
                 continue
 
-            cv2.line(frame, right_hand_partFrom,right_hand_partTo, color, 1)
+            cv2.line(frame, right_hand_partFrom,right_hand_partTo, color, 2)
             #cv2.ellipse(frame, right_hand_partFrom, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
             #cv2.ellipse(frame, right_hand_partTo, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
             #cv2.putText(white, str(idFrom), points[idFrom], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
