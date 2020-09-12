@@ -11,7 +11,7 @@ num_decoder_blocks = 6
 num_heads = 8
 d_model = 256
 d_ffn = 256
-d_out = 202
+d_out = 154 # 154 for 3d, 103 for 2d
 
 # models
 bert = Bert(max_sequence_length=80)
@@ -19,7 +19,7 @@ decoder = Decoder(num_decoder_blocks, num_heads, d_model, d_ffn, d_out)
 
 # optim and ckpt
 EPOCHS = 1000
-learning_rate = 0.0002
+learning_rate = 0.0002     ## tweak
 optimizer = tf.keras.optimizers.Adam(learning_rate)     # rest default
 
 # Loss
@@ -44,15 +44,20 @@ def train_step(bert_out, tar, seq_lengths):
     print("Loss : ", loss)
 
 # train loop
-def train(sen_path, sign_path, batch_size, net_sequence_length):
+def train(sen_path, sign_path, batch_size, net_sequence_length, coor='3D'):
     # ckpt
-    checkpoint_path = './training_checkpoints'
+    if coor == '3D':
+        checkpoint_path = './training_checkpoints3d'
+    else:
+        checkpoint_path = './training_checkpoints'
     ckpt = tf.train.Checkpoint(decoder=decoder,
                             optimizer=optimizer)
     ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
     if ckpt_manager.latest_checkpoint:
         ckpt.restore(ckpt_manager.latest_checkpoint)
-        print ('Latest checkpoint restored!!')
+        print('Latest checkpoint restored!!')
+    else:
+        print('Initialised checkpoint')
 
     # train
     f = open(sen_path, encoding='utf-8')
@@ -68,7 +73,11 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
     for epoch in range(EPOCHS):
         print("Epoch : ", epoch + 1)
         for iteration in range(len(dataset)):
-            tar = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
+            if coor == '3D':
+                tar = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
+            else:
+                tar = get_processed_data_2d(sign_path, dataset, iteration, net_sequence_length)
+
             #print(sentences[iteration])
             #print(len(sentences[iteration]))
             words, _, seq_lengths = bert(sentences[iteration])
@@ -80,6 +89,30 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
         ckpt_save_path = ckpt_manager.save()
         print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
                                                     ckpt_save_path))
+
+
+def test_vid(sentences, path, video, net_sequence_length):
+    # ckpt
+    checkpoint_path = './models/slp_normalized_150'
+    ckpt = tf.train.Checkpoint(decoder=decoder,
+                            optimizer=optimizer)
+    ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
+    if ckpt_manager.latest_checkpoint:
+        ckpt.restore(ckpt_manager.latest_checkpoint)
+        print('Model Loaded!!')
+    else:
+        print('Initialised checkpoint')
+
+    tar_inp = get_processed_data(path, video, 0, net_sequence_length)[:, :-1, :]
+    words, _, seq_lengths = bert(sentences[0])
+
+    pad_mask = padding_mask(words.shape[1], seq_lengths)
+    la_mask = look_ahead_mask(tar_inp.shape[1])
+
+    pred = decoder(tar_inp, words, la_mask, pad_mask)
+
+    return pred
+
 
 
 if __name__ == '__main__':

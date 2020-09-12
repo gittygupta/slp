@@ -5,7 +5,7 @@ import bert
 #max_sequence_length = 64
 
 class Bert(object):
-    def __init__(self, max_sequence_length):     # doesn't quite matter (variable)
+    def __init__(self, max_sequence_length):     # doesn't quite matter
         super(Bert, self).__init__()
         self.max_seq_length = max_sequence_length
         self.model_dir = 'models/multi_cased_L-12_H-768_A-12'
