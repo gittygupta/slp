@@ -43,6 +43,12 @@ HAND_PAIRS = [[0, 1], [1, 2], [2, 3], [3, 4],
             [0, 13], [13, 14], [14, 15], [15, 16], 
             [0, 17], [17, 18], [18, 19], [19, 20]]
 
+FINGER_COLORS = [(0, 0, 255),   # thumb
+                (0, 255, 0),    # index
+                (255, 255, 0),  # middle
+                (0, 255, 255),  # ring 
+                (255, 0, 255)]  # pinkie
+
 # only the ones that are needed
 POSE_PAIRS = [[0, 1], [1, 2], [2, 3], [3, 4], [1, 5], [5, 6], [6, 7], [1, 8]]
 
@@ -78,13 +84,15 @@ def draw(pred, size, coor='3D'):
                 continue
 
             cv2.line(frame, pose_partFrom, pose_partTo, (255, 74, 0), 1)
-            cv2.ellipse(frame, pose_partFrom, (2, 2), 0, 0, 360, (255, 255, 255), cv2.FILLED)
-            cv2.ellipse(frame, pose_partTo, (2, 2), 0, 0, 360, (255, 255, 255), cv2.FILLED)
+            #cv2.ellipse(frame, pose_partFrom, (2, 2), 0, 0, 360, (255, 255, 255), cv2.FILLED)
+            #cv2.ellipse(frame, pose_partTo, (2, 2), 0, 0, 360, (255, 255, 255), cv2.FILLED)
             #cv2.putText(white, str(idFrom), points[idFrom], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
             #cv2.putText(white, str(idTo), points[idTo], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
 
         # left
-        for pair in HAND_PAIRS:
+        for j, pair in enumerate(HAND_PAIRS):
+            color = FINGER_COLORS[j // 4]
+
             partFrom = pair[0]
             partTo = pair[1]
 
@@ -94,14 +102,16 @@ def draw(pred, size, coor='3D'):
             if left_hand_partFrom == (0., 0.) or left_hand_partTo == (0., 0.):
                 continue
 
-            cv2.line(frame, left_hand_partFrom, left_hand_partTo, (0, 255, 0), 1)
-            cv2.ellipse(frame, left_hand_partFrom, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
-            cv2.ellipse(frame, left_hand_partTo, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
+            cv2.line(frame, left_hand_partFrom, left_hand_partTo, color, 1)
+            #cv2.ellipse(frame, left_hand_partFrom, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
+            #cv2.ellipse(frame, left_hand_partTo, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
             #cv2.putText(white, str(idFrom), points[idFrom], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
             #cv2.putText(white, str(idTo), points[idTo], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
 
         # right
-        for pair in HAND_PAIRS:
+        for j, pair in enumerate(HAND_PAIRS):
+            color = FINGER_COLORS[j // 4]
+
             partFrom = pair[0]
             partTo = pair[1]
 
@@ -111,13 +121,13 @@ def draw(pred, size, coor='3D'):
             if right_hand_partFrom == (0., 0.) or right_hand_partTo == (0., 0.):
                 continue
 
-            cv2.line(frame, right_hand_partFrom,right_hand_partTo, (0, 255, 0), 1)
-            cv2.ellipse(frame, right_hand_partFrom, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
-            cv2.ellipse(frame, right_hand_partTo, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
+            cv2.line(frame, right_hand_partFrom,right_hand_partTo, color, 1)
+            #cv2.ellipse(frame, right_hand_partFrom, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
+            #cv2.ellipse(frame, right_hand_partTo, (2, 2), 0, 0, 360, (255, 255, 0), cv2.FILLED)
             #cv2.putText(white, str(idFrom), points[idFrom], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
             #cv2.putText(white, str(idTo), points[idTo], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
 
-        cv2.imwrite(str(i) + '.jpg', frame)
+        cv2.imwrite('output/' + str(i) + '.jpg', frame)
 
 
 def main():
