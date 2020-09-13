@@ -64,6 +64,8 @@ def draw_3d(pose, left_hand, right_hand, i):
 
     #print(pose.shape)
     for (x, y, z) in pose:
+        if x < -0.8:
+            continue
         ax.scatter(x, y, z, color='black', marker='s')
     
     for pair in POSE_PAIRS:
@@ -220,10 +222,9 @@ def draw(pred):
 def main():
     sign_path = 'train'
     net_seq_len = 512
-    pred = get_processed_data(sign_path, [['02September_2010_Thursday_tagesschau-8371']], 0, net_seq_len)
-    pred = pred[0, :139]
+    pred = get_processed_data(sign_path, [['02September_2010_Thursday_heute-3450']], 0, net_seq_len)
+    pred = pred[0, :43]
     draw(pred)
-    #draw_3d()
 
 if __name__ == '__main__':
     from data_utils import *
