@@ -1,2 +1,1 @@
 # slp
-schedule lr
