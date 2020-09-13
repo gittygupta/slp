@@ -19,7 +19,7 @@ decoder = Decoder(num_decoder_blocks, num_heads, d_model, d_ffn, d_out)
 
 # optim and ckpt
 EPOCHS = 1000
-learning_rate = 0.0002     ## tweak
+learning_rate = 0.00000001     ## tweak
 optimizer = tf.keras.optimizers.Adam(learning_rate)     # rest default
 
 # Loss
@@ -91,9 +91,9 @@ def train(sen_path, sign_path, batch_size, net_sequence_length, coor='3D'):
                                                     ckpt_save_path))
 
 
-def test_vid(sentences, path, video, net_sequence_length):
+def test_vid(model_path, sentences, path, video, net_sequence_length):
     # ckpt
-    checkpoint_path = './models/slp_normalized_150'
+    checkpoint_path = model_path
     ckpt = tf.train.Checkpoint(decoder=decoder,
                             optimizer=optimizer)
     ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
