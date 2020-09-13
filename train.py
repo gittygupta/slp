@@ -11,7 +11,7 @@ num_decoder_blocks = 6
 num_heads = 8
 d_model = 256
 d_ffn = 256
-d_out = 154 # 154 for 3d, 103 for 2d
+d_out = 154
 
 # models
 bert = Bert(max_sequence_length=80)
@@ -19,9 +19,26 @@ decoder = Decoder(num_decoder_blocks, num_heads, d_model, d_ffn, d_out)
 
 # optim and ckpt
 EPOCHS = 1000
-learning_rate = 0.00000001     ## tweak
-optimizer = tf.keras.optimizers.Adam(learning_rate)     # rest default
 
+class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
+    def __init__(self, d_model, warmup_steps=4000):
+        super(CustomSchedule, self).__init__()
+        
+        self.d_model = d_model
+        self.d_model = tf.cast(self.d_model, tf.float32)
+
+        self.warmup_steps = warmup_steps
+        
+    def __call__(self, step):
+        arg1 = tf.math.rsqrt(step)
+        arg2 = step * (self.warmup_steps ** -1.5)
+        
+        return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
+
+learning_rate = CustomSchedule(d_model)
+
+optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98, 
+                                     epsilon=1e-9)
 # Loss
 mse = tf.keras.losses.MeanSquaredError()
 
@@ -44,12 +61,9 @@ def train_step(bert_out, tar, seq_lengths):
     print("Loss : ", loss)
 
 # train loop
-def train(sen_path, sign_path, batch_size, net_sequence_length, coor='3D'):
+def train(sen_path, sign_path, batch_size, net_sequence_length):
     # ckpt
-    if coor == '3D':
-        checkpoint_path = './training_checkpoints3d'
-    else:
-        checkpoint_path = './training_checkpoints'
+    checkpoint_path = './training_checkpoints'
     ckpt = tf.train.Checkpoint(decoder=decoder,
                             optimizer=optimizer)
     ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
@@ -73,15 +87,8 @@ def train(sen_path, sign_path, batch_size, net_sequence_length, coor='3D'):
     for epoch in range(EPOCHS):
         print("Epoch : ", epoch + 1)
         for iteration in range(len(dataset)):
-            if coor == '3D':
-                tar = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
-            else:
-                tar = get_processed_data_2d(sign_path, dataset, iteration, net_sequence_length)
-
-            #print(sentences[iteration])
-            #print(len(sentences[iteration]))
+            tar = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
             words, _, seq_lengths = bert(sentences[iteration])
-            #print(words.shape)
 
             train_step(words, tar, seq_lengths)
 

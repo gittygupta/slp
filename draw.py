@@ -2,6 +2,9 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
+from mpl_toolkits import mplot3d as plt3d
+import matplotlib.pyplot as plt
+
 # Poses
 '''
 //     {0,  "Nose"},
@@ -49,28 +52,100 @@ FINGER_COLORS = [(0, 0, 255),   # thumb
                 (0, 255, 255),  # ring 
                 (255, 0, 255)]  # pinkie
 
+FINGER_COLORS_3D = ['green', 'red', 'cyan', 'magenta', 'yellow']
+
 # only the ones that are needed
 POSE_PAIRS = [[0, 1], [1, 2], [2, 3], [3, 4], [1, 5], [5, 6], [6, 7], [1, 8]]
 
-def draw(pred, size, coor='3D'):
-    VEC = tf.convert_to_tensor([size[0] / 2., size[1] / 2.])
-    ADD = tf.convert_to_tensor([size[0] / 2., size[1] / 2.])
+def draw_3d(pose, left_hand, right_hand, i):
+    fig = plt.figure()
+    fig.set_size_inches(10, 10)
+    ax = fig.add_subplot(111, projection='3d')
 
+    #print(pose.shape)
+    for (x, y, z) in pose:
+        ax.scatter(x, y, z, color='black', marker='s')
+    
+    for pair in POSE_PAIRS:
+        partFrom = pair[0]
+        partTo = pair[1]
+
+        ### special cases
+        # hands shouldd not go ridiculously across the screen
+        # when model predicts values near 0
+        if abs(pose[partFrom][0] - pose[partTo][0]) >= 1.:      # with normalized coords
+            continue
+
+        #if pose[partFrom] == (0., 0.) or pose_partTo == (0., 0.):
+        #    continue
+
+        xs = pose[partFrom][0], pose[partTo][0]
+        ys = pose[partFrom][1], pose[partTo][1]
+        zs = pose[partFrom][2], pose[partTo][2]
+
+        line = plt3d.art3d.Line3D(xs, ys, zs)
+
+        ax.add_line(line)
+    
+    # left
+    for j, pair in enumerate(HAND_PAIRS):
+        color = FINGER_COLORS_3D[j // 4]
+
+        partFrom = pair[0]
+        partTo = pair[1]
+
+        ### special cases
+        # when model predicts values near 0
+        if left_hand[partFrom][0] < -0.8 or left_hand[partTo][0] < -0.8:
+            continue
+
+        xs = left_hand[partFrom][0], left_hand[partTo][0]
+        ys = left_hand[partFrom][1], left_hand[partTo][1]
+        zs = left_hand[partFrom][2], left_hand[partTo][2]
+
+        line = plt3d.art3d.Line3D(xs, ys, zs, color=color)
+
+        ax.add_line(line)
+
+    # right
+    for j, pair in enumerate(HAND_PAIRS):
+        color = FINGER_COLORS_3D[j // 4]
+
+        partFrom = pair[0]
+        partTo = pair[1]
+
+        ### special cases
+        # when model predicts values near 0
+        if right_hand[partFrom][0] < -0.8 or right_hand[partTo][0] < -0.8:
+            continue
+
+        xs = right_hand[partFrom][0], right_hand[partTo][0]
+        ys = right_hand[partFrom][1], right_hand[partTo][1]
+        zs = right_hand[partFrom][2], right_hand[partTo][2]
+
+        line = plt3d.art3d.Line3D(xs, ys, zs, color=color)
+
+        ax.add_line(line)
+    
+    ax.view_init(-90, -90)      # to position the axis properly
+    plt.axis('off')
+    plt.savefig('output/' + str(i) + '.jpg')
+    plt.close()
+
+
+def draw(pred):
     pred = pred[:, :-1]
-    if coor == '3D':
-        pred = tf.reshape(pred, (pred.shape[0], -1, 3))
-    else:
-        pred = tf.reshape(pred, (pred.shape[0], -1, 2))
+    pred = tf.reshape(pred, (pred.shape[0], -1, 3))
     
     pose = pred[:, :9, :]
     left_hand = pred[:, 9:30, :]
     right_hand = pred[:, 30:, :]
 
-    if coor == '3D':
-        pose = pose[:, :, :-1]
-        left_hand = left_hand[:, :, :-1]
-        right_hand = right_hand[:, :, :-1]
+    #draw_3d(pose, left_hand, right_hand)
 
+    for i in range(pred.shape[0]):
+        draw_3d(pose[i], left_hand[i], right_hand[i], i)
+    '''
     for i in range(pred.shape[0]):
         frame = np.zeros((size[0], size[1], 3), np.uint8)
         for pair in POSE_PAIRS:
@@ -79,6 +154,12 @@ def draw(pred, size, coor='3D'):
 
             pose_partFrom = tuple(pose[i][partFrom] * VEC + ADD)
             pose_partTo = tuple(pose[i][partTo] * VEC + ADD)
+
+            ### special cases
+            # hands shouldd not go ridiculously across the screen
+            # when model predicts values near 0
+            if abs(pose_partFrom[0] - pose_partTo[0]) >= size[0] / 2.:
+                continue
 
             if pose_partFrom == (0., 0.) or pose_partTo == (0., 0.):
                 continue
@@ -98,6 +179,12 @@ def draw(pred, size, coor='3D'):
 
             left_hand_partFrom = tuple(left_hand[i][partFrom] * VEC + ADD)
             left_hand_partTo = tuple(left_hand[i][partTo] * VEC + ADD)
+
+            ### special cases
+            # any hand should not be present on the top left corner
+            # when model predicts values near 0
+            if left_hand_partFrom[0] < size[0] / 10. or left_hand_partTo[0] < size[0] / 10.:
+                continue
 
             if left_hand_partFrom == (0., 0.) or left_hand_partTo == (0., 0.):
                 continue
@@ -128,14 +215,15 @@ def draw(pred, size, coor='3D'):
             #cv2.putText(white, str(idTo), points[idTo], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255),2,cv2.LINE_AA)
 
         cv2.imwrite('output/' + str(i) + '.jpg', frame)
-
+    '''
 
 def main():
     sign_path = 'train'
     net_seq_len = 512
-    pred = get_processed_data_2d(sign_path, [['02September_2010_Thursday_tagesschau-8371']], 0, net_seq_len)
-    pred = pred[0, :50]
-    draw(pred, size=(300, 300), coor='2D')
+    pred = get_processed_data(sign_path, [['02September_2010_Thursday_tagesschau-8371']], 0, net_seq_len)
+    pred = pred[0, :139]
+    draw(pred)
+    #draw_3d()
 
 if __name__ == '__main__':
     from data_utils import *
