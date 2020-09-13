@@ -121,10 +121,11 @@ def test_vid(model_path, sentences, path, video, net_sequence_length):
     return pred
 
 
-
+'''
 if __name__ == '__main__':
     sen_path = '/content/drive/My Drive/Internships/ISI/PHOENIX-2014-T.train.corpus.csv'
     sign_path = '/content/drive/My Drive/Internships/ISI/train'
     batch_size = 16
     net_sequence_length = 512
     train(sen_path, sign_path, batch_size, net_sequence_length)
+'''
