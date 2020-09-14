@@ -1,3 +1,3 @@
 # slp
-inference loop
-add video
+* inference loop
+* add video
