@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import cv2
+import os
 
 from mpl_toolkits import mplot3d as plt3d
 import matplotlib.pyplot as plt
@@ -219,12 +220,34 @@ def draw(pred):
         cv2.imwrite('output/' + str(i) + '.jpg', frame)
     '''
 
+
+def out_video(inputpath,outputpath,fps):
+    image_array = []
+    files = [f for f in os.listdir(inputpath)]
+    print(files)
+    for i in range(len(files)):
+        img = cv2.imread(inputpath + files[i])
+        size =  (img.shape[1], img.shape[0])
+        img = cv2.resize(img, size)
+        image_array.append(img)
+    fourcc = cv2.VideoWriter_fourcc('D', 'I', 'V', 'X')
+    out = cv2.VideoWriter(outputpath, fourcc, fps, size)
+    for i in range(len(image_array)):
+        out.write(image_array[i])
+    out.release()
+
+
 def main():
     sign_path = 'train'
     net_seq_len = 512
     pred = get_processed_data(sign_path, [['02September_2010_Thursday_heute-3450']], 0, net_seq_len)
     pred = pred[0, :43]
     draw(pred)
+
+    inputpath = ''
+    outpath =  'video.mp4'
+    fps = 24
+    out_video(inputpath, outpath, fps)
 
 if __name__ == '__main__':
     from data_utils import *
