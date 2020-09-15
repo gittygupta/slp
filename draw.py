@@ -132,7 +132,7 @@ def draw_3d(pose, left_hand, right_hand, i):
     
     ax.view_init(-90, -90)      # to position the axis properly
     plt.axis('off')
-    plt.savefig('output/' + str(i) + '.jpg')
+    plt.savefig('output/' + str(i) + '.jpg')    # use numbers only to save files
     plt.close()
 
 
@@ -220,13 +220,12 @@ def draw(pred):
         cv2.imwrite('output/' + str(i) + '.jpg', frame)
     '''
 
-
-def out_video(inputpath,outputpath,fps):
+# assume images are numbered only
+def out_video(inputpath, outputpath, fps):
     image_array = []
-    files = [f for f in os.listdir(inputpath)]
-    print(files)
+    files = os.listdir(inputpath)
     for i in range(len(files)):
-        img = cv2.imread(inputpath + files[i])
+        img = cv2.imread(inputpath + '/' + str(i) + '.jpg')
         size =  (img.shape[1], img.shape[0])
         img = cv2.resize(img, size)
         image_array.append(img)
@@ -240,11 +239,11 @@ def out_video(inputpath,outputpath,fps):
 def main():
     sign_path = 'train'
     net_seq_len = 512
-    pred = get_processed_data(sign_path, [['02September_2010_Thursday_heute-3450']], 0, net_seq_len)
-    pred = pred[0, :43]
+    pred = get_processed_data(sign_path, [['02September_2010_Thursday_tagesschau-8371']], 0, net_seq_len)
+    pred = pred[0, :139]
     draw(pred)
 
-    inputpath = ''
+    inputpath = 'output'
     outpath =  'video.mp4'
     fps = 24
     out_video(inputpath, outpath, fps)

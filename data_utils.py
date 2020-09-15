@@ -28,12 +28,11 @@ def get_data(path, dataset, iteration):
 
         #print(d)
         for i, filename in enumerate(files):
-            #print(filename)
             f = open(data_path + '/' + filename)
             content = f.readlines()
             
             if len(content) != 67:  # printing the ones that have discrepency of 2 persons being detected
-                #print(d, filename)
+                print(d, filename)
                 continue
             
             pose = []
@@ -56,7 +55,7 @@ def get_data(path, dataset, iteration):
                     else:
                         right_hand.append(list(map(float, con[3:-2].split())))
 
-            ### Addition ###
+            ### Normalize ###
             pose = tf.transpose((tf.transpose(tf.convert_to_tensor(pose)) - SUB) / VEC)
             left_hand = tf.transpose((tf.transpose(tf.convert_to_tensor(left_hand)) - SUB) / VEC)
             right_hand = tf.transpose((tf.transpose(tf.convert_to_tensor(right_hand)) - SUB) / VEC)
