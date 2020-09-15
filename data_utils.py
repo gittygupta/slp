@@ -30,6 +30,7 @@ def get_data(path, dataset, iteration):
         for i, filename in enumerate(files):
             f = open(data_path + '/' + filename)
             content = f.readlines()
+            f.close()
             
             if len(content) != 67:  # printing the ones that have discrepency of 2 persons being detected
                 print(d, filename)
