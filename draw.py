@@ -237,10 +237,17 @@ def out_video(inputpath, outputpath, fps):
 
 
 def main():
+    # clear output folder
+    directory = 'output'
+    files = os.listdir(directory)
+
+    for f in files:
+        os.remove(directory + '/' + f)
+
     sign_path = 'train'
     net_seq_len = 512
-    pred = get_processed_data(sign_path, [['02September_2010_Thursday_tagesschau-8371']], 0, net_seq_len)
-    pred = pred[0, :139]
+    pred = get_processed_data(sign_path, [['01April_2010_Thursday_tagesschau-4323']], 0, net_seq_len)
+    pred = pred[0, :90]
     draw(pred)
 
     inputpath = 'output'
