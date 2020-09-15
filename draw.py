@@ -245,7 +245,7 @@ def main():
 
     inputpath = 'output'
     outpath =  'video.mp4'
-    fps = 24
+    fps = 25    # from dataset
     out_video(inputpath, outpath, fps)
 
 if __name__ == '__main__':
