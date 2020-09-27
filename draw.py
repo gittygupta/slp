@@ -239,12 +239,14 @@ def out_video(inputpath, outputpath, fps):
 def main():
     # clear output folder
     directory = 'output'
+    if not os.path.exists(directory):
+        os.mkdir(directory)
     files = os.listdir(directory)
 
     for f in files:
         os.remove(directory + '/' + f)
 
-    sign_path = 'train'
+    sign_path = 'PHOENIX-2014-T-POSES'
     net_seq_len = 512
     pred = get_processed_data(sign_path, [['01April_2010_Thursday_heute-6694']], 0, net_seq_len)
     pred = pred[0, :139]
