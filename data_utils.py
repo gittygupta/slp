@@ -4,14 +4,16 @@ import os
 
 IMG_X = 210 / 2.
 IMG_Y = 260 / 2.
-IMG_Z = 1.
+IMG_Z = 0.5
 
 VEC = tf.expand_dims(tf.convert_to_tensor([IMG_X, IMG_Y, IMG_Z]), axis=-1)
-SUB = tf.expand_dims(tf.convert_to_tensor([IMG_X, IMG_Y, 0.]), axis=-1)
+SUB = tf.expand_dims(tf.convert_to_tensor([IMG_X, IMG_Y, IMG_Z]), axis=-1)
 
 def get_data(path, dataset, iteration):
     #dataset = os.listdir(path)
     #dataset = [dataset[i : i + batch_size] for i in range(0, len(dataset), batch_size)]
+
+    doubles = open('doubles2.txt', 'a')
     
     data = dataset[iteration]
     
@@ -31,30 +33,65 @@ def get_data(path, dataset, iteration):
             f = open(data_path + '/' + filename)
             content = f.readlines()
             f.close()
-            
-            if len(content) != 67:  # printing the ones that have discrepency of 2 persons being detected
+
+            if len(content) == 0:   # special case
                 print(d, filename)
+                doubles.write(d + ' ' + filename + '\n')
                 continue
+
+            if len(content) != 67:  # printing the ones that have discrepency of > 1 persons being detected
+                pose_count = 25
+                hand_count = 21
+
+                skips = (len(content) % 67) // 3
             
-            pose = []
-            left_hand = []
-            right_hand = []
-            for j, con in enumerate(content):
-                if j < 25:
-                    if j == 24:
-                        pose.append(list(map(float, con[3:-4].split())))
+                count = 0
+
+                pose = []
+                left_hand = []
+                right_hand = []
+
+                for j in range(pose_count):
+                    if j == pose_count - 1:
+                        pose.append(list(map(float, content[j][3:-3].split())))
                     else:
-                        pose.append(list(map(float, con[3:-2].split())))
-                elif j < 46:
-                    if j == 45:
-                        left_hand.append(list(map(float, con[3:-4].split())))
+                        pose.append(list(map(float, content[j][3:-2].split())))
+                
+                count = j + skips * (pose_count + 1)
+                for j in range(count + 1, count + hand_count + 1):
+                    if j == (count + hand_count):
+                        left_hand.append(list(map(float, content[j][3:-3].split())))
                     else:
-                        left_hand.append(list(map(float, con[3:-2].split())))
-                else:
-                    if j == len(content) - 1:
-                        right_hand.append(list(map(float, con[3:-4].split())))
+                        left_hand.append(list(map(float, content[j][3:-2].split())))
+        
+                count = j + skips * (hand_count + 1)
+                for j in range(count + 1, count + hand_count + 1):
+                    if j == (count + hand_count):
+                        right_hand.append(list(map(float, content[j][3:-3].split())))
                     else:
-                        right_hand.append(list(map(float, con[3:-2].split())))
+                        right_hand.append(list(map(float, content[j][3:-2].split())))
+
+
+            else:            
+                pose = []
+                left_hand = []
+                right_hand = []
+                for j, con in enumerate(content):
+                    if j < 25:
+                        if j == 24:
+                            pose.append(list(map(float, con[3:-4].split())))
+                        else:
+                            pose.append(list(map(float, con[3:-2].split())))
+                    elif j < 46:
+                        if j == 45:
+                            left_hand.append(list(map(float, con[3:-4].split())))
+                        else:
+                            left_hand.append(list(map(float, con[3:-2].split())))
+                    else:
+                        if j == len(content) - 1:
+                            right_hand.append(list(map(float, con[3:-4].split())))
+                        else:
+                            right_hand.append(list(map(float, con[3:-2].split())))
 
             ### Normalize ###
             pose = tf.transpose((tf.transpose(tf.convert_to_tensor(pose)) - SUB) / VEC)
@@ -87,6 +124,8 @@ def get_data(path, dataset, iteration):
         #right_hands = tf.reshape(right_hands, (i+1, -1, right_hands.shape[-1]))
 
         batched_data.append([poses, left_hands, right_hands])
+
+    doubles.close()
 
     return batched_data
 

@@ -18,7 +18,7 @@ bert = Bert(max_sequence_length=80)
 decoder = Decoder(num_decoder_blocks, num_heads, d_model, d_ffn, d_out)
 
 # optim and ckpt
-EPOCHS = 1000
+EPOCHS = 1
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
@@ -101,8 +101,8 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
 
 
 if __name__ == '__main__':
-    sen_path = 'train.csv'
-    sign_path = 'train'
+    sen_path = 'PHOENIX-2014-T.train.corpus.csv'
+    sign_path = 'PHOENIX-2014-T-POSES'
     batch_size = 8
     net_sequence_length = 512
     train(sen_path, sign_path, batch_size, net_sequence_length)

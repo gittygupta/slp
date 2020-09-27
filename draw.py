@@ -246,8 +246,8 @@ def main():
 
     sign_path = 'train'
     net_seq_len = 512
-    pred = get_processed_data(sign_path, [['01April_2010_Thursday_tagesschau-4323']], 0, net_seq_len)
-    pred = pred[0, :90]
+    pred = get_processed_data(sign_path, [['01April_2010_Thursday_heute-6694']], 0, net_seq_len)
+    pred = pred[0, :139]
     draw(pred)
 
     inputpath = 'output'
