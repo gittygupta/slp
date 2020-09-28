@@ -18,7 +18,7 @@ bert = Bert(max_sequence_length=80)
 decoder = Decoder(num_decoder_blocks, num_heads, d_model, d_ffn, d_out)
 
 # optim and ckpt
-EPOCHS = 1
+EPOCHS = 9
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
@@ -45,7 +45,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98,
 mse = tf.keras.losses.MeanSquaredError()
 
 # train step
-def train_step(bert_out, tar, seq_lengths):
+def train_step(bert_out, tar, seq_lengths, iteration):
     bert_out = tf.convert_to_tensor(bert_out)
     tar_inp = tar[:, :-1, :]
     tar_real = tar[:, 1:, :]
@@ -60,7 +60,8 @@ def train_step(bert_out, tar, seq_lengths):
     gradients = tape.gradient(loss, decoder.trainable_variables)
     optimizer.apply_gradients(zip(gradients, decoder.trainable_variables))
 
-    print("Loss : ", loss)
+    if (iteration + 1) % 100 == 0:
+        print("Loss : ", loss)
 
 # train loop
 def train(sen_path, sign_path, batch_size, net_sequence_length):
@@ -92,7 +93,7 @@ def train(sen_path, sign_path, batch_size, net_sequence_length):
             tar = get_processed_data(sign_path, dataset, iteration, net_sequence_length)
             words, _, seq_lengths = bert(sentences[iteration])
 
-            train_step(words, tar, seq_lengths)
+            train_step(words, tar, seq_lengths, iteration)
 
         #if (epoch + 1) % 5 == 0:
         ckpt_save_path = ckpt_manager.save()
