@@ -98,8 +98,13 @@ def draw_3d(pose, left_hand, right_hand, i):
         partTo = pair[1]
 
         ### special cases
-        # when model predicts values near 0
+        # when model predicts values near 0 (for x)
         if left_hand[partFrom][0] < -0.8 or left_hand[partTo][0] < -0.8:
+            continue
+
+        # when model predicts values near 0 (for x)
+        ## Variable
+        if left_hand[partFrom][2] < -0.8 or left_hand[partTo][2] < -0.8:    ## variable
             continue
 
         xs = left_hand[partFrom][0], left_hand[partTo][0]
@@ -122,6 +127,11 @@ def draw_3d(pose, left_hand, right_hand, i):
         if right_hand[partFrom][0] < -0.8 or right_hand[partTo][0] < -0.8:
             continue
 
+        # when model predicts values near 0 (for x)
+        ## Variable
+        if right_hand[partFrom][2] < -0.8 or right_hand[partTo][2] < -0.8:      ## variable 
+            continue
+
         xs = right_hand[partFrom][0], right_hand[partTo][0]
         ys = right_hand[partFrom][1], right_hand[partTo][1]
         zs = right_hand[partFrom][2], right_hand[partTo][2]
@@ -132,7 +142,7 @@ def draw_3d(pose, left_hand, right_hand, i):
     
     ax.view_init(-90, -90)      # to position the axis properly
     plt.axis('off')
-    plt.savefig('output/' + str(i) + '.jpg')    # use numbers only to save files
+    plt.savefig('output1/' + str(i) + '.jpg')    # use numbers only to save files
     plt.close()
 
 
@@ -238,7 +248,7 @@ def out_video(inputpath, outputpath, fps):
 
 def main():
     # clear output folder
-    directory = 'output'
+    directory = 'output1'
     if not os.path.exists(directory):
         os.mkdir(directory)
     files = os.listdir(directory)
@@ -249,10 +259,10 @@ def main():
     sign_path = 'PHOENIX-2014-T-POSES'
     net_seq_len = 512
     pred = get_processed_data(sign_path, [['01April_2010_Thursday_heute-6694']], 0, net_seq_len)
-    pred = pred[0, :139]
+    pred = pred[0, 1:54]
     draw(pred)
 
-    inputpath = 'output'
+    inputpath = 'output1'
     outpath =  'video.mp4'
     fps = 25    # from dataset
     out_video(inputpath, outpath, fps)
